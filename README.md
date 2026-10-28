@@ -23,6 +23,10 @@ An agent is an LLM that can call tools, so a mistake can become an action. Each 
   <br><sub><i>The agent harness: every control sits between the user, the model and its tools.</i></sub>
 </p>
 
+### 🗺️ Overview: how one request flows through the five controls
+
+Read left to right: input is checked and masked, the model may call a tool, the tool call is authorized and (if risky) approved by a human, and the whole run is audited.
+
 ```mermaid
 flowchart LR
     U(["👤 User"]):::user --> G1["🛡️ 1 Guardrails<br/>input checks"]:::guard
