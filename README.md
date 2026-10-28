@@ -14,115 +14,157 @@
 The working code behind the deck "Responsible Agentic AI", ATAL FDP, 28 Oct 2026.
 Everything runs **locally with Ollama**. You do not need an OpenAI key.
 
-## The five concepts
+## 🧭 The five concepts
 
 An agent is an LLM that can call tools, so a mistake can become an action. Each concept below adds one control around the model.
 
 ```mermaid
 flowchart LR
-    U([User]) --> G1["1 Guardrails<br/>input checks"]
-    G1 --> G2["2 Privacy<br/>mask PII"]
-    G2 --> M[(LLM)]
-    M -->|tool call| A["3 Authorization<br/>who may do this?"]
-    A --> H["4 Human approval<br/>risky actions"]
-    H --> T[[Tool]]
+    U(["👤 User"]):::user --> G1["🛡️ 1 Guardrails<br/>input checks"]:::guard
+    G1 --> G2["🔒 2 Privacy<br/>mask PII"]:::priv
+    G2 --> M[("🧠 LLM")]:::llm
+    M -->|tool call| A["🔑 3 Authorization<br/>who may do this?"]:::auth
+    A --> H["🧑‍⚖️ 4 Human approval<br/>risky actions"]:::human
+    H --> T[["🔧 Tool"]]:::tool
     T --> M
-    M --> R["5 Trust<br/>audit + eval"]
-    R --> O([Reply])
+    M --> R["📋 5 Trust<br/>audit + eval"]:::trust
+    R --> O(["✅ Reply"]):::user
+    classDef user fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+    classDef guard fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+    classDef priv fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    classDef llm fill:#fef9c3,stroke:#ca8a04,color:#713f12
+    classDef auth fill:#ffedd5,stroke:#ea580c,color:#7c2d12
+    classDef human fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef tool fill:#f1f5f9,stroke:#475569,color:#0f172a
+    classDef trust fill:#cffafe,stroke:#0891b2,color:#164e63
 ```
 
-### 1. Guardrails: `01_guardrails.py`
+### 🛡️ 1. Guardrails: `01_guardrails.py`
 
 **Idea:** check the input *before* the model runs. A prompt-injection filter and a custom scope rule reject bad requests, and `tool_call_limit` caps runaway tool loops. A blocked request never reaches the model.
 
 ```mermaid
 flowchart LR
-    I([Prompt]) --> P{PromptInjection<br/>Guardrail}
-    P -->|attack| X1[/RunStatus.error/]
-    P -->|ok| S{scope_guard<br/>bulk export?}
-    S -->|out of scope| X2[/InputCheckError/]
-    S -->|ok| L[LLM]
-    L -->|tool calls ≤ limit| Out([Reply])
+    I(["💬 Prompt"]):::user --> P{"🛡️ PromptInjection<br/>Guardrail"}:::guard
+    P -->|attack| X1[/"⛔ RunStatus.error"/]:::bad
+    P -->|ok| S{"📏 scope_guard<br/>bulk export?"}:::guard
+    S -->|out of scope| X2[/"⛔ InputCheckError"/]:::bad
+    S -->|ok| L["🧠 LLM"]:::llm
+    L -->|"tool calls ≤ limit"| Out(["✅ Reply"]):::ok
+    classDef user fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+    classDef guard fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+    classDef bad fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
+    classDef llm fill:#fef9c3,stroke:#ca8a04,color:#713f12
+    classDef ok fill:#dcfce7,stroke:#16a34a,color:#14532d
 ```
 
-### 2. Privacy: `02_privacy.py`
+### 🔒 2. Privacy: `02_privacy.py`
 
 **Idea:** the model should never see raw personal data. `PIIDetectionGuardrail` masks emails plus custom Aadhaar and PAN patterns with asterisks before the prompt is sent.
 
 ```mermaid
 flowchart LR
-    I(["Draft feedback for<br/>priya@college.edu, PAN ABCDE1234F"]) --> M["PII mask<br/>email · Aadhaar · PAN"]
-    M -->|"Draft feedback for *****, PAN **********"| L[LLM]
-    L --> Out([Reply])
+    I(["📧 Draft feedback for<br/>priya@college.edu, PAN ABCDE1234F"]):::raw --> M["🔒 PII mask<br/>email · Aadhaar · PAN"]:::priv
+    M -->|"Draft feedback for *****, PAN **********"| L["🧠 LLM"]:::llm
+    L --> Out(["✅ Reply"]):::ok
+    classDef raw fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+    classDef priv fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    classDef llm fill:#fef9c3,stroke:#ca8a04,color:#713f12
+    classDef ok fill:#dcfce7,stroke:#16a34a,color:#14532d
 ```
 
-### 3. Authorization: `03_authorization.py`
+### 🔑 3. Authorization: `03_authorization.py`
 
 **Idea:** the app, not the model, decides who may do what. A tool hook runs on every tool call and compares the logged-in `user_id` with the requested `student_id`. Students read only their own marks; `faculty-1` reads all.
 
 ```mermaid
 sequenceDiagram
-    participant U as User (user_id)
-    participant L as LLM
-    participant H as authorize() hook
-    participant T as get_marks tool
+    participant U as 👤 User (user_id)
+    participant L as 🧠 LLM
+    participant H as 🔑 authorize() hook
+    participant T as 🔧 get_marks tool
     U->>L: Marks of student s2?
     L->>H: get_marks(student_id="s2")
     alt user is s2 or faculty-1
+        rect rgb(220, 252, 231)
         H->>T: call
         T-->>H: "s2: 82"
         H-->>L: result
+        end
     else anyone else
+        rect rgb(254, 226, 226)
         H-->>L: DENIED: s1 cannot read s2
+        end
     end
     L-->>U: Reply
 ```
 
-### 4. Human-in-the-loop: `04_human_in_the_loop.py`
+### 🧑‍⚖️ 4. Human-in-the-loop: `04_human_in_the_loop.py`
 
 **Idea:** irreversible actions need a person's approval. A tool marked `requires_confirmation=True` pauses the run; a human confirms or rejects, then `continue_run` resumes it.
 
 ```mermaid
 stateDiagram-v2
     [*] --> Running
-    Running --> Paused: LLM calls send_parent_email
-    Paused --> Approved: human types y
-    Paused --> Rejected: human types n
+    Running --> Paused: ⏸️ LLM calls send_parent_email
+    Paused --> Approved: ✅ human types y
+    Paused --> Rejected: ❌ human types n
     Approved --> Running: continue_run, email sent
     Rejected --> Running: continue_run, tool skipped
-    Running --> [*]: final reply
+    Running --> [*]: 💬 final reply
+    classDef run fill:#fef9c3,stroke:#ca8a04,color:#713f12
+    classDef pause fill:#ffedd5,stroke:#ea580c,color:#7c2d12
+    classDef good fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef bad fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+    class Running run
+    class Paused pause
+    class Approved good
+    class Rejected bad
 ```
 
-### 5. Trust: `05_trust.py`
+### 📋 5. Trust: `05_trust.py`
 
 **Idea:** you can only trust what you can inspect. A post-hook writes one audit record per run (user, run id, tools used), and `ReliabilityEval` checks the agent called the expected tools before release.
 
 ```mermaid
 flowchart LR
-    R([Agent run]) --> A["audit() post-hook<br/>user · run_id · tools"]
-    A --> LOG[(Log store)]
-    R --> E["ReliabilityEval<br/>expected_tool_calls"]
-    E --> V{{PASSED / FAILED}}
+    R(["🤖 Agent run"]):::run --> A["📝 audit() post-hook<br/>user · run_id · tools"]:::trust
+    A --> LOG[("🗄️ Log store")]:::store
+    R --> E["🧪 ReliabilityEval<br/>expected_tool_calls"]:::trust
+    E --> V{{"✅ PASSED / ❌ FAILED"}}:::ok
+    classDef run fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+    classDef trust fill:#cffafe,stroke:#0891b2,color:#164e63
+    classDef store fill:#f1f5f9,stroke:#475569,color:#0f172a
+    classDef ok fill:#dcfce7,stroke:#16a34a,color:#14532d
 ```
 
-### All five together: `06_all_in_one.py`
+### 🚀 All five together: `06_all_in_one.py`
 
 ```mermaid
 flowchart TD
-    U([User + user_id]) --> G["1 PromptInjectionGuardrail"]
-    G -->|blocked| B[/Rejected/]
-    G --> P["2 PII masking"]
-    P --> L[LLM]
-    L -->|tool call| Z{"3 authorize()"}
+    U(["👤 User + user_id"]):::user --> G["🛡️ 1 PromptInjectionGuardrail"]:::guard
+    G -->|blocked| B[/"⛔ Rejected"/]:::bad
+    G --> P["🔒 2 PII masking"]:::priv
+    P --> L["🧠 LLM"]:::llm
+    L -->|tool call| Z{"🔑 3 authorize()"}:::auth
     Z -->|denied| L
-    Z -->|allowed| C{"4 needs confirmation?"}
-    C -->|yes| H["Human y/N"] --> TL[[Tool runs]]
+    Z -->|allowed| C{"🧑‍⚖️ 4 needs confirmation?"}:::human
+    C -->|yes| H["✋ Human y/N"]:::human --> TL[["🔧 Tool runs"]]:::tool
     C -->|no| TL
     TL --> L
-    L --> AU["5 audit()"] --> O([Reply])
+    L --> AU["📋 5 audit()"]:::trust --> O(["✅ Reply"]):::user
+    classDef user fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+    classDef guard fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+    classDef bad fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
+    classDef priv fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    classDef llm fill:#fef9c3,stroke:#ca8a04,color:#713f12
+    classDef auth fill:#ffedd5,stroke:#ea580c,color:#7c2d12
+    classDef human fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef tool fill:#f1f5f9,stroke:#475569,color:#0f172a
+    classDef trust fill:#cffafe,stroke:#0891b2,color:#164e63
 ```
 
-## Files
+## 📁 Files
 
 | File                        | Slide             | What it shows                                                        |
 | --------------------------- | ----------------- | -------------------------------------------------------------------- |
