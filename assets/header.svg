@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-label="Responsible Agentic AI">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="0.5" stop-color="#1e1b4b"/>
+      <stop offset="1" stop-color="#0c4a6e"/>
+    </linearGradient>
+    <linearGradient id="txt" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+    <style>
+      .title { font: 800 54px 'Segoe UI', Arial, sans-serif; fill: url(#txt); }
+      .sub   { font: 400 22px 'Segoe UI', Arial, sans-serif; fill: #cbd5e1; }
+      .chip  { font: 600 15px 'Segoe UI', Arial, sans-serif; fill: #e2e8f0; }
+      .fade  { animation: fade 1.2s ease-out both; }
+      .d2 { animation-delay: .4s; } .d3 { animation-delay: .8s; }
+      @keyframes fade { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+      .float { animation: float 6s ease-in-out infinite; }
+      .float2 { animation: float 8s ease-in-out infinite reverse; }
+      @keyframes float { 50% { transform: translateY(-14px); } }
+      .pulse { animation: pulse 3s ease-in-out infinite; transform-origin: 1040px 150px; }
+      @keyframes pulse { 50% { transform: scale(1.08); opacity: .7; } }
+    </style>
+  </defs>
+  <rect width="1200" height="300" fill="url(#bg)"/>
+  <g opacity=".25" stroke="#38bdf8">
+    <circle class="float" cx="140" cy="60" r="70" fill="none"/>
+    <circle class="float2" cx="1100" cy="250" r="90" fill="none"/>
+    <circle class="float" cx="620" cy="285" r="40" fill="#a78bfa" stroke="none"/>
+  </g>
+  <!-- shield -->
+  <g class="pulse">
+    <path d="M1040 85 L1095 105 V155 C1095 190 1070 213 1040 225 C1010 213 985 190 985 155 V105 Z" fill="none" stroke="#38bdf8" stroke-width="5"/>
+    <path d="M1015 155 l18 18 l34 -38" fill="none" stroke="#a78bfa" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text class="title fade" x="60" y="130">Responsible Agentic AI</text>
+  <text class="sub fade d2" x="60" y="175">Guardrails · Privacy · Authorization · Human-in-the-loop · Trust</text>
+  <g class="fade d3">
+    <rect x="60" y="205" width="130" height="34" rx="17" fill="#ffffff22"/><text class="chip" x="82" y="227">Agno</text>
+    <rect x="205" y="205" width="130" height="34" rx="17" fill="#ffffff22"/><text class="chip" x="228" y="227">Ollama</text>
+    <rect x="350" y="205" width="170" height="34" rx="17" fill="#ffffff22"/><text class="chip" x="372" y="227">100% local</text>
+  </g>
+</svg>
