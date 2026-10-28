@@ -18,6 +18,11 @@ Everything runs **locally with Ollama**. You do not need an OpenAI key.
 
 An agent is an LLM that can call tools, so a mistake can become an action. Each concept below adds one control around the model.
 
+<p align="center">
+  <img src="assets/agent_harness_motion.gif" alt="Animated agent harness: controls wrapped around the LLM and its tools" width="85%">
+  <br><sub><i>The agent harness: every control sits between the user, the model and its tools.</i></sub>
+</p>
+
 ```mermaid
 flowchart LR
     U(["👤 User"]):::user --> G1["🛡️ 1 Guardrails<br/>input checks"]:::guard
